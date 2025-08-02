@@ -11,8 +11,9 @@ Queue* creare_queue() {
 void enqueue(Queue *q, const char *url) {
 
 	Node *new_node = (Node *)malloc(sizeof(Node));
+	new_node->url = malloc(strlen(url)+1);
 	strcpy(new_node->url, url);
-
+	new_node->next = NULL;
 	if (is_empty(q)) {
 		q->head = new_node;
 		q->tail = new_node;
@@ -43,7 +44,6 @@ char* dequeue(Queue *q) {
 
 
 int is_empty(Queue *q) {
-	
 	return (q->head == NULL);
 }
 

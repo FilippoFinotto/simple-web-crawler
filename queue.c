@@ -1,6 +1,6 @@
 #include "queue.h"
 
-Queue* creare_queue() {
+Queue* create_queue() {
 
 	Queue *new_queue= (Queue *)malloc(sizeof(Queue));
 	new_queue->head = NULL;

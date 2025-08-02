@@ -13,7 +13,7 @@ HashTable* create_table(int size) {
 unsigned long hash_function(const char *url) {
 	unsigned long hash = 5381;
 	int c;
-	while(c = *url++) {
+	while((c = *url++)) {
 		hash = ((hash << 5) + hash) + c;
 	}
 	return hash;
@@ -25,7 +25,7 @@ void insert(HashTable *ht, const char *url) {
 
 	HashNode *current = ht->table[index];
 	while(current != NULL) {
-		if(strcmp(current->url, url)==0) return
+		if(strcmp(current->url, url)==0) return;
 		current = current -> next;
 	}
 

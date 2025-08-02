@@ -1,7 +1,7 @@
 CC = gcc
-CFLAGS = -Wall -g -fopenmp
-LDFLAGS = -lm -fopenmp
-SRC = crawler.c hashtable.c http.c parser.c queue.c parser.c queue.c
+CFLAGS = -Wall -g -fopenmp 
+LDFLAGS = -lm -fopenmp -lcurl -lgumbo
+SRC = crawler.c hashtable.c http.c parser.c queue.c
 OBJ = $(SRC:.c=.o)
 DEPS = $(SRC:.c=.d)
 EXEC = myprogram

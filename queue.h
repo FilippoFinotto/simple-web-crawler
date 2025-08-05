@@ -21,5 +21,6 @@ void enqueue(Queue *q, const char *url);
 char* dequeue(Queue *q);
 int is_empty(Queue *q);
 void destroy_queue(Queue *q);
+void print_queue(Queue *q);
 
 #endif

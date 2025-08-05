@@ -20,8 +20,9 @@ unsigned long hash_function(const char *url) {
 }
 
 void insert(HashTable *ht, const char *url) {
-
-	int index = hash_function(url) % ht->size;
+	if(ht == NULL || url ==NULL) return;
+	
+	unsigned int index = hash_function(url) % ht->size;
 
 	HashNode *current = ht->table[index];
 	while(current != NULL) {
@@ -30,11 +31,17 @@ void insert(HashTable *ht, const char *url) {
 	}
 
 	HashNode *new_node = (HashNode *)malloc(sizeof(HashNode));
-	new_node->url = malloc(strlen(url)+1);
-        strcpy(new_node->url, url);
+	if(new_node == NULL) return;
+
+	new_node->url = strdup(url);
+	if(new_node->url == NULL){
+		free(new_node);
+		return;
+	}
 	new_node->next = ht->table[index];
 	ht->table[index] = new_node;
 }
+
 
 int search(HashTable *ht, const char *url) {
 	int index = hash_function(url) % ht->size;
@@ -49,6 +56,8 @@ int search(HashTable *ht, const char *url) {
 
 
 void destroy_table(HashTable *ht) {
+	if(ht == NULL) return;
+
 	for(int i=0; i<ht->size; i++){
 		HashNode *current = ht->table[i];
 		while(current != NULL){
@@ -57,13 +66,45 @@ void destroy_table(HashTable *ht) {
 			free(current);
 			current = next_node;
 		}	
-		free(ht->table);
-		free(ht);
 	}
+	free(ht->table);
+	free(ht);
 }
 
 
+void print_table(HashTable *ht) {
+    printf("--- Inizio Contenuto HashTable ---\n\n");
 
+    if (ht == NULL) {
+        printf("La HashTable è NULL.\n");
+        printf("--- Fine Contenuto HashTable ---\n\n");
+        return;
+    }
+
+    int total_entries = 0;
+
+    // Ciclo FOR esterno: scorre l'array dei bucket
+    for (int i = 0; i < ht->size; i++) {
+        // Prende il puntatore al primo nodo del bucket corrente
+        HashNode *current = ht->table[i];
+
+        // Stampa il contenuto del bucket solo se non è vuoto
+        if (current != NULL) {
+            printf("Bucket[%4d]: ", i);
+
+            // Ciclo WHILE interno: scorre la lista concatenata nel bucket
+            while (current != NULL) {
+                printf("\"%s\" -> ", current->url);
+                total_entries++;
+                current = current->next; // Passa al prossimo nodo nella catena
+            }
+            printf("NULL\n");
+        }
+    }
+    
+    printf("\nTotale URL nella HashTable: %d\n", total_entries);
+    printf("--- Fine Contenuto HashTable ---\n\n");
+}
 
 
 

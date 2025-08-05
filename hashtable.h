@@ -20,6 +20,7 @@ unsigned long hash(const char *url);
 void insert(HashTable *ht, const char *url);
 int search(HashTable *ht, const char *url);
 void destroy_table(HashTable *ht);
+void print_table(HashTable *ht);
 
 #endif
 

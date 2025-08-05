@@ -19,6 +19,12 @@ static char* get_base_domain(const char *base_url){
 	}
 
 	char* domain = malloc(domain_len +1);
+	if (domain == NULL) {
+		return NULL;
+	}
+
+	strncpy(domain, base_url, domain_len);
+
 	domain[domain_len] = '\0';
 	return domain;
 }
@@ -38,7 +44,7 @@ char* rel_to_abs_url(const char *initial_url, const char *base_url){
 		size_t total_len = strlen(base_url) + strlen(initial_url) +1;
 		char *abs_url = malloc(total_len);
 		if(!abs_url){
-			free(abs_url);
+			free(domain);
 			return NULL;
 		}
 
@@ -51,35 +57,44 @@ char* rel_to_abs_url(const char *initial_url, const char *base_url){
 	return NULL;
 }
 
-static int is_valid(const char *url){
-	if(!url) return 0;
-	if ((strncmp(url, "http://", 7) == 0) || (strncmp(url, "https://", 8) == 0)){
-                return 0;
-        }
+static int is_valid(const char *url) {
+    if (url == NULL) {
+        return 0;
+    }
 
-	char* extensions_to_avoid[] = {
+    if (strncmp(url, "http://", 7) != 0 && strncmp(url, "https://", 8) != 0) {
+        return 0;
+    }
+
+    char *last_dot = strrchr(url, '.');
+    char *last_slash = strrchr(url, '/');
+
+    if (last_dot == NULL) {
+        return 1;
+    }
+
+    if (last_dot < last_slash) {
+        return 1;
+    }
+
+    char* extensions_to_avoid[] = {
         ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".zip", ".css", ".js",
         ".mp3", ".mp4", ".avi", ".mov", ".docx", ".xlsx", ".pptx", NULL
-	};
+    };
 
-	char *last_dot = strrchr(url, '.');
-	if (last_dot != NULL) {
-		if (strchr(last_dot, '/')) {
-			return 1;
-		}
-		for (int i = 0; extensions_to_avoid[i] != NULL; ++i) {
-			if (strcmp(last_dot, extensions_to_avoid[i]) == 0) {
-				return 0;
-			}
-		}
-	}
-	return 1;
+    for (int i = 0; extensions_to_avoid[i] != NULL; i++) {
+        if (strcmp(last_dot, extensions_to_avoid[i]) == 0) {
+            return 0; 
+        }
+    }
+
+    return 1;
 }
-
 
 
 static void recursive_tree_navigation(GumboNode *node, Queue *link_queue, char *base_url) {
 	if(!node || node->type != GUMBO_NODE_ELEMENT) return;
+
 	if (node->v.element.tag == GUMBO_TAG_A) {
 		GumboAttribute* href_attr = gumbo_get_attribute(&node->v.element.attributes, "href");
 		if (href_attr) {
@@ -87,7 +102,8 @@ static void recursive_tree_navigation(GumboNode *node, Queue *link_queue, char *
 
 			char* absolute_url = rel_to_abs_url(href_value, base_url);
 			if (absolute_url != NULL) {
-				if (is_valid(absolute_url)) {
+				int valid_result = is_valid(absolute_url);
+				if (valid_result) {
 					enqueue(link_queue, absolute_url);
 				}
 				free(absolute_url);
@@ -98,8 +114,6 @@ static void recursive_tree_navigation(GumboNode *node, Queue *link_queue, char *
 	for (unsigned int i = 0; i < children->length; ++i) {
 		recursive_tree_navigation(children->data[i], link_queue, base_url);
 	}
-
-
 }
 
 Queue* find_links(char *html_buffer, char *base_url){

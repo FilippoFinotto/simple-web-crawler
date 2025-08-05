@@ -7,6 +7,6 @@
 #include <string.h>
 #include <gumbo.h>
 
-Queue* find_links(const char *html_buffer, const char *base_url);
+Queue* find_links(char *html_buffer, char *base_url);
 
 #endif

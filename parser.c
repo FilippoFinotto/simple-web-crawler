@@ -3,13 +3,13 @@
 /*This function extracts the base url from a complete url, it outputs (es. https://units.it from http://units.it/path
  * it returns an allocated string that must be freed by the caller or NULL if there's an error */
 
-static const char* get_base_domain(const char *base_url){
+static char* get_base_domain(const char *base_url){
 	if(!base_url) return NULL;
 
-	const char *protocol_end = strstr(base_url, "://");
+	char *protocol_end = strstr(base_url, "://");
     	if (!protocol_end) return NULL;
 
-	const char *path_start = strchr(protocol_end + 3, '/');
+	char *path_start = strchr(protocol_end + 3, '/');
 
 	size_t domain_len;
 	if(path_start != NULL){
@@ -18,8 +18,8 @@ static const char* get_base_domain(const char *base_url){
 		domain_len = strlen(base_url);
 	}
 
-	const char* domain = malloc(domain_len +1);
-	domain[domain_len] = "\0";
+	char* domain = malloc(domain_len +1);
+	domain[domain_len] = '\0';
 	return domain;
 }
 
@@ -27,16 +27,16 @@ static const char* get_base_domain(const char *base_url){
  * if its relative it adds the relative part to the absolute url
  * it doesn't check for all edge cases. */
 
-const char* rel_to_abs_url(const char *initial_url, const char *base_url){
+char* rel_to_abs_url(const char *initial_url, const char *base_url){
 	if ((strncmp(initial_url, "http://", 7) == 0) || (strncmp(initial_url, "https://", 8) == 0)){
 		return strdup(initial_url);
 
 	}
 	if (strncmp(initial_url, "/", 1) == 0){
-		const char *domain = get_base_domain(base_url);
+		char *domain = get_base_domain(base_url);
 		if(!domain) return NULL;
 		size_t total_len = strlen(base_url) + strlen(initial_url) +1;
-		const char *abs_url = malloc(total_len);
+		char *abs_url = malloc(total_len);
 		if(!abs_url){
 			free(abs_url);
 			return NULL;
@@ -52,17 +52,17 @@ const char* rel_to_abs_url(const char *initial_url, const char *base_url){
 }
 
 static int is_valid(const char *url){
-	if(!url) return NULL;
-	if ((strncmp(initial_url, "http://", 7) == 0) || (strncmp(initial_url, "https://", 8) == 0)){
+	if(!url) return 0;
+	if ((strncmp(url, "http://", 7) == 0) || (strncmp(url, "https://", 8) == 0)){
                 return 0;
         }
 
-	const char* extensions_to_avoid[] = {
+	char* extensions_to_avoid[] = {
         ".jpg", ".jpeg", ".png", ".gif", ".pdf", ".zip", ".css", ".js",
         ".mp3", ".mp4", ".avi", ".mov", ".docx", ".xlsx", ".pptx", NULL
 	};
 
-	const char *last_dot = strrchr(absolute_url, '.');
+	char *last_dot = strrchr(url, '.');
 	if (last_dot != NULL) {
 		if (strchr(last_dot, '/')) {
 			return 1;
@@ -78,7 +78,7 @@ static int is_valid(const char *url){
 
 
 
-static void recursive_tree_navigation(GumboNode *node, Queue *link_queue, const char *url base_url) {
+static void recursive_tree_navigation(GumboNode *node, Queue *link_queue, char *base_url) {
 	if(!node || node->type != GUMBO_NODE_ELEMENT) return;
 	if (node->v.element.tag == GUMBO_TAG_A) {
 		GumboAttribute* href_attr = gumbo_get_attribute(&node->v.element.attributes, "href");
@@ -102,7 +102,7 @@ static void recursive_tree_navigation(GumboNode *node, Queue *link_queue, const 
 
 }
 
-Queue* find_links(const char *html_buffer, const char *base_url){
+Queue* find_links(char *html_buffer, char *base_url){
 	Queue *link_queue = create_queue();
 	if(!link_queue) return NULL;
 

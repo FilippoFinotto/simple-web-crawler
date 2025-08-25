@@ -158,10 +158,3 @@ Since all worker threads access the same `frontier` queue and `visited` hash tab
 - **Critical Sections**: Any block of code that reads from or writes to a shared resource is wrapped in `pthread_mutex_lock()` and `pthread_mutex_unlock()`.
 - **Race Condition Prevention**: A local flag (`should_crawl`) is used to solve the classic "check-then-act" race condition. A thread locks the `visited` mutex, checks if a URL exists, inserts it if it doesn't, and sets its local flag—all within a single atomic operation. The decision to download the page is then made outside the critical section based on this safe, local flag.
 
-## Future Work
-
-- **Robots.txt Compliance**: Implement a parser for `robots.txt` to respectfully crawl websites and obey their disallow directives.
-- **Politeness Delay**: Add a configurable delay between requests to the same domain to avoid overwhelming servers.
-- **Sophisticated URL Filtering**: Improve the `is_valid` function to handle more edge cases and potentially use regular expressions.
-- **Save to Disk**: Add functionality to save the crawled content or the list of visited URLs to a file.
-- **Distributed Crawling**: As a major extension, the architecture could be adapted to run across multiple machines.

@@ -23,7 +23,6 @@ void enqueue(Queue *q, const char *url) {
 	}else {
 		q->tail->next = new_node;
 		q->tail= new_node;
-
 	}
 }
 
@@ -31,11 +30,15 @@ void enqueue(Queue *q, const char *url) {
 
 char* dequeue(Queue *q) {
 	if (is_empty(q)) return NULL;
+
 	Node *temp_node = q->head;
 	char *url1 = temp_node->url;
 	q->head = temp_node->next;
+
 	if (is_empty(q)) q->tail = NULL;
+
 	free(temp_node);
+	
 	return url1;
 }
 
@@ -72,11 +75,4 @@ void print_queue(Queue *q) {
     
     	printf("--- End of the queue ---\n\n");
 }
-
-
-
-
-
-
-
 

@@ -5,6 +5,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* The HashTable is implemented using an array of pointers to pointers to the head of a linked
+ * list, and since I'm using separate chaining to solve collisions the nodes of the list are elements of 
+ * the linked lists containing the url
+ *
+ * table[index]: ---> [node.url | node.next] ----> [node.url | NULL] 
+ * table[index2]: ---> [node.url | node.next] ----> NULL
+ *
+ * .*/
+
 typedef struct HashNode {
 	char *url;
 	struct HashNode *next;

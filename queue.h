@@ -11,7 +11,7 @@ typedef struct Node{
         struct Node *next;
 }Node;
 
-typedef struct Queue{
+typedef struct{
         struct Node *head;
         struct Node *tail;
 }Queue;

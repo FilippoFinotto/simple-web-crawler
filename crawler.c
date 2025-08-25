@@ -7,8 +7,8 @@
 #include <pthread.h>
 #include <unistd.h>
 
-#define HASH_TABLE_SIZE 1000 
-#define MAX_PAGES_TO_CRAWL 100
+#define HASH_TABLE_SIZE 100 
+#define MAX_PAGES_TO_CRAWL 10 
 #define THREAD_NUM 32 
 
 
@@ -82,7 +82,7 @@ void* routine(void *thread_args){
 int main(){
 
 
-	char* seed_url = strdup("https://it.wikipedia.org/wiki/Crawler");
+	char* seed_url = strdup("https://www.unipd.it/");
 	
 	Queue* frontier = create_queue();
 	HashTable* visited = create_table(HASH_TABLE_SIZE);

@@ -1,3 +1,6 @@
+/* This Module is responsible for dowloading the content of a given url using the library libcur. */
+
+
 #ifndef HTTP_H
 #define HTTP_H
 

@@ -2,6 +2,8 @@
 
 #define INITIAL_CAPACITY 4096
 
+/* This is the callback function that is going to be called everytime we recieve a packet. */
+
 size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
 	size_t piece_size = size * nmemb;
         HttpData *buffer = (HttpData *)userp;
@@ -29,32 +31,31 @@ size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
 }
 
 HttpData* download_page(const char *url) {
-    	CURL *my_handle = curl_easy_init();
+    	CURL *my_handle = curl_easy_init(); // Obtaining the handle to configure.
     	if (my_handle == NULL) {
         	printf("Errore di inizializzazione dell'handle di CURL\n");
-        	return NULL; // Nessuna risorsa allocata, posso uscire subito
-    	}
-
-    	HttpData *data = malloc(sizeof(HttpData));
-    	if (data == NULL) {
-        	printf("Errore nell'allocazione della memoria per il puntatore ai dati\n");
-        	curl_easy_cleanup(my_handle); // Libero la risorsa CURL
         	return NULL;
     	}
 
-    	data->memory = malloc(INITIAL_CAPACITY);
+    	HttpData *data = malloc(sizeof(HttpData)); // Allocating the memory for the struct.
+    	if (data == NULL) {
+        	printf("Errore nell'allocazione della memoria per il puntatore ai dati\n");
+        	curl_easy_cleanup(my_handle); 
+        	return NULL;
+    	}
+
+    	data->memory = malloc(INITIAL_CAPACITY); // Allocating the memory for the data.
     	if (data->memory == NULL) {
 		printf("Errore nell'allocazione della memoria per i dati\n");
-		free(data); // Libero la struct
-		curl_easy_cleanup(my_handle); // Libero la risorsa CURL
+		free(data); 
+		curl_easy_cleanup(my_handle); 
 		return NULL;
     	}
 
-	    data->size = 0;
-	    data->capacity = INITIAL_CAPACITY;
-	    CURLcode res;
+	data->size = 0;
+	data->capacity = INITIAL_CAPACITY;
+	CURLcode res;
 
-    // A partire da qui, se qualcosa va male, devo liberare data->memory, data, e my_handle.
 #define CLEANUP_AND_FAIL() \
     	do { \
         	free(data->memory); \
@@ -94,7 +95,7 @@ HttpData* download_page(const char *url) {
 		CLEANUP_AND_FAIL();
 	}
 
-    	res = curl_easy_setopt(my_handle, CURLOPT_TIMEOUT, 15L); // Timeout di 15 secondi
+    	res = curl_easy_setopt(my_handle, CURLOPT_TIMEOUT, 15L); 
     	if (res != CURLE_OK) {
         	fprintf(stderr, "curl_easy_setopt(CURLOPT_TIMEOUT) failed: %s\n", curl_easy_strerror(res));
         	CLEANUP_AND_FAIL();
@@ -103,12 +104,8 @@ HttpData* download_page(const char *url) {
     	res = curl_easy_perform(my_handle);
     	if (res != CURLE_OK) {
         	fprintf(stderr, "Errore durante curl_easy_perform: %s\n", curl_easy_strerror(res));
-        // Non uso la macro perché data e data->memory sono già stati liberati
-        // all'interno di write_callback se l'errore è di memoria.
-        // Ma per altri errori (es. timeout) non lo sono. La macro è più sicura.
         	CLEANUP_AND_FAIL();
     	} else {
-        // SUCCESSO
         char *new_memory = realloc(data->memory, data->size + 1);
         if (new_memory == NULL) {
             	fprintf(stderr, "Errore nella riallocazione della memoria per l'aggiunta del carattere di terminazione\n");
@@ -118,12 +115,10 @@ HttpData* download_page(const char *url) {
         data->capacity = data->size + 1;
         data->memory[data->size] = '\0';
         
-        // Pulisco solo l'handle di CURL perché data e data->memory devono essere restituiti.
         curl_easy_cleanup(my_handle);
         return data;
     	}
 
-    	// Questa riga non dovrebbe mai essere raggiunta, ma per sicurezza:
     	CLEANUP_AND_FAIL();
 }
 

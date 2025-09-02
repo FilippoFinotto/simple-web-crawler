@@ -1,6 +1,6 @@
 #include "parser.h"
 
-/*This function extracts the base url from a complete url, it outputs (es. https://units.it from http://units.it/path
+/*This function extracts the base url from a complete url, it outputs (es. https://units.it from http://units.it/path)
  * it returns an allocated string that must be freed by the caller or NULL if there's an error */
 
 static char* get_base_domain(const char *base_url){
@@ -36,13 +36,16 @@ static char* get_base_domain(const char *base_url){
 char* rel_to_abs_url(const char *initial_url, const char *base_url){
 	if ((strncmp(initial_url, "http://", 7) == 0) || (strncmp(initial_url, "https://", 8) == 0)){
 		return strdup(initial_url);
-
 	}
+
 	if (strncmp(initial_url, "/", 1) == 0){
+
 		char *domain = get_base_domain(base_url);
 		if(!domain) return NULL;
+		
 		size_t total_len = strlen(base_url) + strlen(initial_url) +1;
 		char *abs_url = malloc(total_len);
+
 		if(!abs_url){
 			free(domain);
 			return NULL;
@@ -56,6 +59,8 @@ char* rel_to_abs_url(const char *initial_url, const char *base_url){
 	}
 	return NULL;
 }
+
+/* This function checks if the url is a valid url of a document that contains other links*/
 
 static int is_valid(const char *url) {
     if (url == NULL) {
@@ -91,16 +96,18 @@ static int is_valid(const char *url) {
     return 1;
 }
 
+/* This function gets called to navigate the tree starting from the root and find all the new links contained in the page*/
 
 static void recursive_tree_navigation(GumboNode *node, Queue *link_queue, char *base_url) {
 	if(!node || node->type != GUMBO_NODE_ELEMENT) return;
 
 	if (node->v.element.tag == GUMBO_TAG_A) {
-		GumboAttribute* href_attr = gumbo_get_attribute(&node->v.element.attributes, "href");
+		GumboAttribute* href_attr = gumbo_get_attribute(&node->v.element.attributes, "href"); // We check if the node contains an href attribute
 		if (href_attr) {
 			const char* href_value = href_attr->value;
 
 			char* absolute_url = rel_to_abs_url(href_value, base_url);
+
 			if (absolute_url != NULL) {
 				int valid_result = is_valid(absolute_url);
 				if (valid_result) {
@@ -110,7 +117,7 @@ static void recursive_tree_navigation(GumboNode *node, Queue *link_queue, char *
 			}
 		}
 	}
-	GumboVector* children = &node->v.element.children;
+	GumboVector* children = &node->v.element.children; // List of children nodes
 	for (unsigned int i = 0; i < children->length; ++i) {
 		recursive_tree_navigation(children->data[i], link_queue, base_url);
 	}
@@ -120,8 +127,9 @@ Queue* find_links(char *html_buffer, char *base_url){
 	Queue *link_queue = create_queue();
 	if(!link_queue) return NULL;
 
-	GumboOutput *output = gumbo_parse(html_buffer);
-	recursive_tree_navigation(output->root, link_queue, base_url);
+	GumboOutput *output = gumbo_parse(html_buffer); // This is the initial step, gumbo_parse returns a pointer to a GumboOutput struct
+							// The struct contains output->root, the node we start the navigation from.
+	recursive_tree_navigation(output->root, link_queue, base_url); 
 
 	gumbo_destroy_output(&kGumboDefaultOptions, output);
 

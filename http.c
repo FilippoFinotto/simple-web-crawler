@@ -2,18 +2,24 @@
 
 #define INITIAL_CAPACITY 4096
 
-/* This is the callback function that is going to be called everytime we recieve a packet. */
+/* This is the callback function that is going to be called everytime we recieve a chunk of data.
+ * It adds the packet to the data, doubling the data capacity if the memory block is full.
+ * Contents, size, nmemb and userp are inputs recieved from libcurl when it calls the function
+ *  contents: the actual page content
+ *  size: the byte size of each item
+ *  nmemb: number of items
+ *  userp: the adress where we store the data */
 
 size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
 	size_t piece_size = size * nmemb;
         HttpData *buffer = (HttpData *)userp;
-	if (buffer->size + piece_size >= buffer->capacity) {
+	if (buffer->size + piece_size >= buffer->capacity) { // Checking to see if there's enough space, otherwise we double it
 		size_t new_capacity = buffer->capacity;
 		while (new_capacity < buffer->size + piece_size) {
 			new_capacity *= 2;
 		}
 
-        	char* temp_ptr = realloc(buffer->memory, new_capacity);
+        	char* temp_ptr = realloc(buffer->memory, new_capacity); // Reallocating the memory
         
         	if (temp_ptr == NULL) {
             		free(buffer->memory); 
@@ -64,26 +70,26 @@ HttpData* download_page(const char *url) {
         	return NULL; \
     	} while(0)
 
-    	res = curl_easy_setopt(my_handle, CURLOPT_URL, url);
+    	res = curl_easy_setopt(my_handle, CURLOPT_URL, url); // sets the url 
     	if (res != CURLE_OK) {
         	fprintf(stderr, "curl_easy_setopt(CURLOPT_URL) failed: %s\n", curl_easy_strerror(res));
         	CLEANUP_AND_FAIL();
     	}
 
-    	res = curl_easy_setopt(my_handle, CURLOPT_WRITEFUNCTION, write_callback);
+    	res = curl_easy_setopt(my_handle, CURLOPT_WRITEFUNCTION, write_callback); // call to the write_callback function
     	if (res != CURLE_OK) {
         	fprintf(stderr, "curl_easy_setopt(CURLOPT_WRITEFUNCTION) failed: %s\n", curl_easy_strerror(res));
         	CLEANUP_AND_FAIL();
     	}
 
-    	res = curl_easy_setopt(my_handle, CURLOPT_WRITEDATA, (void *)data);
+    	res = curl_easy_setopt(my_handle, CURLOPT_WRITEDATA, (void *)data); // tells the handle where to write the data he gets from the write_callback
     	if (res != CURLE_OK) {
 		fprintf(stderr, "curl_easy_setopt(CURLOPT_WRITEDATA) failed: %s\n", curl_easy_strerror(res));
 		CLEANUP_AND_FAIL();
     	}
     
     	const char* user_agent = "MioCrawler/1.0";
-    	res = curl_easy_setopt(my_handle, CURLOPT_USERAGENT, user_agent);
+    	res = curl_easy_setopt(my_handle, CURLOPT_USERAGENT, user_agent); 
     	if (res != CURLE_OK) {
 		fprintf(stderr, "curl_easy_setopt(CURLOPT_USERAGENT) failed: %s\n", curl_easy_strerror(res));
 		CLEANUP_AND_FAIL();
@@ -101,7 +107,8 @@ HttpData* download_page(const char *url) {
         	CLEANUP_AND_FAIL();
     	}
 
-    	res = curl_easy_perform(my_handle);
+    	res = curl_easy_perform(my_handle); // here we start the downloading, libcurl gets the connection and waits for the data
+					    // and calls the write_callback if everithing goes well it keeps doing it until the page is downloaded
     	if (res != CURLE_OK) {
         	fprintf(stderr, "Errore durante curl_easy_perform: %s\n", curl_easy_strerror(res));
         	CLEANUP_AND_FAIL();
@@ -130,37 +137,4 @@ void free_http_data(HttpData *data) {
 	free(data->memory);
 	free(data);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

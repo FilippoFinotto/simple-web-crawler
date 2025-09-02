@@ -12,6 +12,7 @@
 #define THREAD_NUM 32 
 
 
+/* Defining the struct for the argument of the threads' routine funcion  */
 typedef struct{
 	Queue *frontier;
 	HashTable *visited;
@@ -22,43 +23,48 @@ typedef struct{
 	pthread_mutex_t *frontier_lock;
 	pthread_mutex_t *visited_lock;
 	pthread_mutex_t *pages_crawled_lock;
-
 } WorkerArgs;
 
 
 void* routine(void *thread_args){
 	WorkerArgs *args = (WorkerArgs*)thread_args;
 	while(1){
+
 		pthread_mutex_lock(args->pages_crawled_lock);
-		if(*(args->pages_crawled) >= args->max_pages){
+		if(*(args->pages_crawled) >= args->max_pages){ // Checking if we have already crawled the max pages
 			pthread_mutex_unlock(args->pages_crawled_lock);
 			break;
 		}	
 		pthread_mutex_unlock(args->pages_crawled_lock);
+
 		char *current_url;
+
 		pthread_mutex_lock(args->frontier_lock);
-		current_url = dequeue(args->frontier);
+		current_url = dequeue(args->frontier); // Dequeueing the first url
 		pthread_mutex_unlock(args->frontier_lock);
+
 		if(current_url == NULL){
 			sleep(1);
 			continue;
 		}
 		int should_crawl = 0; 
+
 		pthread_mutex_lock(args->visited_lock);
-		if(!search(args->visited, current_url)){
+		if(!search(args->visited, current_url)){ // If we didn't already find the url we crawl it
 			insert(args->visited, current_url);
 			should_crawl = 1;
 		}	
 		pthread_mutex_unlock(args->visited_lock);
+
 		if(should_crawl){
 			printf("Crawling: %s\n", current_url);
 			HttpData* page_data = download_page(current_url);
 			if (page_data != NULL) {
 				printf("Download riuscito. %zu bytes scaricati.\n", page_data->size);
-				Queue *new_links = find_links(page_data->memory, current_url);
+				Queue *new_links = find_links(page_data->memory, current_url); // Finding the new links in the downloaded page
 				if(new_links != NULL){
 					pthread_mutex_lock(args->frontier_lock);
-					while(!is_empty(new_links)){
+					while(!is_empty(new_links)){ // Enqueueing all the new links in the frontier
 						char *link = dequeue(new_links);
 						if(link != NULL){
 							enqueue(args->frontier, link);
@@ -67,6 +73,7 @@ void* routine(void *thread_args){
 					}
 					pthread_mutex_unlock(args->frontier_lock);
 				}
+
 				destroy_queue(new_links);
 				free_http_data(page_data);
 				pthread_mutex_lock(args->pages_crawled_lock);
@@ -82,9 +89,9 @@ void* routine(void *thread_args){
 int main(){
 
 
-	char* seed_url = strdup("https://www.unipd.it/");
+	char* seed_url = strdup("https://www.unipd.it/"); 
 	
-	Queue* frontier = create_queue();
+	Queue* frontier = create_queue(); 
 	HashTable* visited = create_table(HASH_TABLE_SIZE);
 	int pages_crawled = 0;
 	enqueue(frontier, seed_url);
